@@ -47,6 +47,10 @@ def on_size_change(new_size):
 def on_bell_type_change(new_type):
     print(f"Changing bell type to {new_type}!")
 
+@tower.on_set_at_hand
+def on_set_at_hand():
+    print("Setting bells at hand")
+
 with tower:
     tower.wait_loaded()
     while True:

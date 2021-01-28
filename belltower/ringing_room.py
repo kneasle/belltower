@@ -21,6 +21,9 @@ class RingingRoomTower:
         self.tower_id = tower_id
         self._url, self._tower_name, self._bell_type = parse_page(tower_id, url)
         self._socket_io_client: Optional[socketio.Client] = None
+        # This is used by `_on_global_bell_state` to determine whether or not a `s_global_state`
+        # signal is caused by us entering the tower or by a user setting the bells at handstroke
+        self._waiting_for_first_global_state = False
 
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
@@ -29,16 +32,18 @@ class RingingRoomTower:
         self._user_name_map: Dict[int, str] = {}
 
         # === CALLBACK LISTS ===
+        # While-ringing actions
         self._invoke_on_call: Dict[str, List[Callable[[], Any]]] = collections.defaultdict(list)
         self._invoke_on_bell_ring: List[Callable[[Bell, Stroke], Any]] = []
+        # Between-touch actions
         self._invoke_on_size_change: List[Callable[[int], Any]] = []
         self._invoke_on_set_at_hand: List[Callable[[], Any]] = []
         # User callbacks
+        self._invoke_on_type_change: List[Callable[[], Any]] = []
         self._invoke_on_user_enter: List[Callable[[int, str], Any]] = []
         self._invoke_on_user_leave: List[Callable[[int, str], Any]] = []
         self._invoke_on_assign: List[Callable[[int, str, Bell], Any]] = []
         self._invoke_on_unassign: List[Callable[[Bell], Any]] = []
-        self._invoke_on_type_change: List[Callable[[], Any]] = []
 
         # Code specific to the Wheatley/RR interface
         self._invoke_on_setting_change: List[Callable[[str, Any], Any]] = []
@@ -143,6 +148,11 @@ class RingingRoomTower:
     def on_bell_type_change(self, func: Callable[[], Any]) -> Callable[[], Any]:
         """ Adds a callback for a user changing the BellType (TOWER_BELLS or HAND_BELLS). """
         self._invoke_on_type_change.append(func)
+        return func
+
+    def on_set_at_hand(self, func: Callable[[], Any]) -> Callable[[], Any]:
+        """ Adds a callback for a user setting the bells at hand. """
+        self._invoke_on_set_at_hand.append(func)
         return func
 
     def on_user_enter(self, func: Callable[[int, str], Any]) -> Callable[[int, str], Any]:
@@ -381,12 +391,20 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
     def _on_global_bell_state(self, data: JSON) -> None:
         """
         Callback called when receiving an update to the global tower state.
-        Cannot have further callbacks assigned to it.
         """
         global_bell_state: List[bool] = data["global_bell_state"]
         self._update_bell_state([Stroke(x) for x in global_bell_state])
-        for invoke_callback in self._invoke_on_size_change:
-            invoke_callback(self.number_of_bells)
+
+        # These are sent for one of two reasons:
+        # 1. A 's_global_state' is sent by the server to all new users so that they get a picture of
+        #   what the bells are doing
+        # 2. When the user sets the bells at hand, it is sent to the clients as a global state change
+        # The only way to tell these two reasons apart is that the first 's_global_state' is in case
+        # (1), whereas all subsequent ones can be assumed to result from bells setting at handstroke
+        if not self._waiting_for_first_global_state:
+            for c in self._invoke_on_set_at_hand:
+                c()
+        self._waiting_for_first_global_state = False
 
     def _on_size_change(self, data: JSON) -> None:
         """ Callback called when the number of bells in the room changes. """
