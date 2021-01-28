@@ -1,5 +1,6 @@
 import collections
 import logging
+import datetime
 from time import sleep
 from typing import Optional, Callable, Dict, List, Any
 
@@ -44,6 +45,7 @@ class RingingRoomTower:
         self._invoke_on_user_leave: List[Callable[[int, str], Any]] = []
         self._invoke_on_assign: List[Callable[[int, str, Bell], Any]] = []
         self._invoke_on_unassign: List[Callable[[Bell], Any]] = []
+        self._invoke_on_chat: List[Callable[[str, str], Any]] = []
 
         # Code specific to the Wheatley/RR interface
         self._invoke_on_setting_change: List[Callable[[str, Any], Any]] = []
@@ -184,6 +186,11 @@ class RingingRoomTower:
         self._invoke_on_unassign.append(func)
         return func
 
+    def on_chat(self, func: Callable[[str, str], Any]) -> Callable[[str, str], Any]:
+        """ Adds a callback for a bell being unassigned. """
+        self._invoke_on_chat.append(func)
+        return func
+
     # ===== ACTIONS =====
 
     def ring_bell(self, bell: Bell, expected_stroke: Stroke) -> bool:
@@ -230,6 +237,17 @@ class RingingRoomTower:
         if user_name is None:
             raise ValueError(f"Assigning non-existent user #{user_id} to bell {bell.number}")
         self.logger.info(f"(EMIT): Assigning user #{user_id}('{user_name}') to {bell.number}")
+
+    def chat(self, user: str, message: str, email: str = "<belltower.py>") -> None:
+        """ Sends a message on chat, using given user name (which doesn't have to valid). """
+        self.logger.info(f"(EMIT): Making chat msg as '{user}'/{email}: {message}")
+        self._emit("c_msg_sent", {
+            "user": user,
+            "msg": message,
+            "email": email,
+            "time": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            "tower_id": self.tower_id
+        })
 
     # ===== CALLS =====
 
@@ -438,6 +456,13 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
             for c in self._invoke_on_type_change:
                 c(self._bell_type)
 
+    def _on_chat(self, data: JSON) -> None:
+        """ Callback called when a chat message is received. """
+        user_name = data["user"]
+        message = data["msg"]
+        for c in self._invoke_on_chat:
+            c(user_name, message)
+
     # === INITIALISATION CODE ===
 
     def _create_client(self) -> None:
@@ -457,6 +482,7 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
         self._socket_io_client.on("s_user_left", self._on_user_leave)
         self._socket_io_client.on("s_set_userlist", self._on_user_list)
         self._socket_io_client.on("s_assign_user", self._on_assign_user)
+        self._socket_io_client.on("s_msg_sent", self._on_chat)
         """
         # Wheatley specific callbacks
         self._socket_io_client.on("s_wheatley_setting", self._on_setting_change)

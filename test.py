@@ -51,6 +51,12 @@ def on_bell_type_change(new_type):
 def on_set_at_hand():
     print("Setting bells at hand")
 
+@tower.on_chat
+def on_chat(user, message):
+    print(f"{user} says '{message}'")
+    if message.lower() == "hello":
+        tower.chat("RR ChatBot", f"Hello, {user}!")
+
 with tower:
     tower.wait_loaded()
     while True:
