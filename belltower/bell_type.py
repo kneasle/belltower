@@ -12,6 +12,13 @@ class BellType:
         """ Returns True if the tower is using tower bells. """
         return not self._is_hand
 
+    def ringingroom_name(self) -> str:
+        """
+        Returns the name of this BellType expected by the Ringing Room server (i.e. "Tower" or
+        "Hand").
+        """
+        return "Hand" if self._is_hand else "Tower"
+
     @classmethod
     def from_ringingroom_name(cls, name: str) -> "BellType":
         if name == "Tower":

@@ -1,6 +1,6 @@
 import time
 
-from belltower import RingingRoomTower, call
+from belltower import RingingRoomTower, call, HAND_BELLS, TOWER_BELLS
 
 tower = RingingRoomTower(389217546)
 
@@ -28,6 +28,11 @@ def on_bob():
 def on_single():
     print("SINGLE!")
     tower.dump_debug_state()
+
+@tower.on_call(call.LOOK_TO)
+def on_look_to():
+    print("LOOK TO!")
+    tower.set_bell_type(HAND_BELLS)
 
 @tower.on_bell_ring
 def on_bell(bell, stroke):

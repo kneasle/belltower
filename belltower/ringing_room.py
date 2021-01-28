@@ -204,7 +204,13 @@ class RingingRoomTower:
         self.logger.info(f"(EMIT): Setting size to {number}")
         self._emit("c_size_change", {"new_size": number, "tower_id": self.tower_id})
 
-    # def set_bell_type(self):
+    def set_bell_type(self, new_type: BellType):
+        """ Set the bell type (tower or hand) of the current tower. """
+        self.logger.info(f"(EMIT): Setting bell type to {new_type}")
+        self._emit("c_audio_change", {
+            "new_audio": new_type.ringingroom_name(),
+            "tower_id": self.tower_id
+        })
 
     def assign_user(self, user_id: int, bell: Bell) -> None:
         """ Assign a user to a given bell. """
@@ -403,12 +409,16 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
     def _on_audio_change(self, data: JSON) -> None:
         """ Callback called when the bell/audio type switches between tower/hand. """
         try:
-            self._bell_type = BellType.from_ringingroom_name(data["new_audio"])
+            new_bell_type = BellType.from_ringingroom_name(data["new_audio"])
         except ValueError as e:
             self.logger.warning(e)
-        # Invoke the callbacks
-        for c in self._invoke_on_type_change:
-            c(self._bell_type)
+        # It seems like Ringing Room sometimes sends the s_new_audio signal multiple times, and so
+        # we only generate callbacks when the bell type is actually changed
+        if new_bell_type != self._bell_type:
+            self._bell_type = new_bell_type
+            # Invoke the callbacks
+            for c in self._invoke_on_type_change:
+                c(self._bell_type)
 
     # === INITIALISATION CODE ===
 
