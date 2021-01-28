@@ -4,6 +4,7 @@ things like the load-balanced URL of the socket-io server and the initial bell s
 """
 
 from typing import Tuple
+import re
 
 import urllib
 import requests
@@ -62,13 +63,18 @@ def parse_page(tower_id: int, unfixed_http_server_url: str) -> Tuple[str, str, B
 
     try:
         # Trying to extract the following line in the rendered html:
-        # server_ip: "{{server_ip}}"
+        # 
+        # name: "{{tower_name}}",
+        # ...
+        # audio: "{{bell_type}}",
+        # ...
+        # server_ip: "{{server_ip}}",
+        #
         # See https://github.com/lelandpaul/virtual-ringing-room/blob/
         #     ec00927ca57ab94fa2ff6a978ffaff707ab23a57/app/templates/ringing_room.html#L46
-        url_start_index = html.index("server_ip") + len('server_ip: "')
-        string_that_starts_with_url = html[url_start_index:]
-        load_balancing_url = string_that_starts_with_url[:string_that_starts_with_url.index('"')]
-
-        return load_balancing_url
+        load_balancing_url, = re.findall('server_ip: "(.*)"', html)
+        tower_name, = re.findall(' name: "(.*)"', html)
+        bell_type_str, = re.findall('audio: "(.*)"', html)
+        return load_balancing_url, tower_name, BellType.from_ringingroom_name(bell_type_str)
     except ValueError as e:
         raise TowerNotFoundError(tower_id, http_server_url) from e

@@ -19,13 +19,12 @@ class RingingRoomTower:
     def __init__(self, tower_id: int, url: str = "ringingroom.com") -> None:
         """ Initialise a tower with a given room id and url. """
         self.tower_id = tower_id
-        self._url = parse_page(tower_id, url)
+        self._url, self._tower_name, self._bell_type = parse_page(tower_id, url)
         self._socket_io_client: Optional[socketio.Client] = None
 
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
         self._assigned_users: Dict[Bell, int] = {}
-        self._bell_type: BellType = TOWER_BELLS
         # A map from user IDs to the corresponding user name
         self._user_name_map: Dict[int, str] = {}
 
@@ -81,6 +80,11 @@ class RingingRoomTower:
         """ Returns the current bell type (hand or tower bells). """
         return self._bell_type
 
+    @property
+    def tower_name(self) -> str:
+        """ Returns the human-readable name of the current tower. """
+        return self._tower_name
+
     def get_stroke(self, bell: Bell) -> Optional[Stroke]:
         """ Returns the stroke of a given Bell, or None if the bell is not in the tower. """
         if bell.index >= len(self._bell_state) or bell.index < 0:
@@ -98,7 +102,8 @@ class RingingRoomTower:
             stroke_string += "H" if stroke.is_hand() else "B"
         # Print debug messages
         self.logger.log(log_level, "===== RR TOWER DEBUG DUMP =====")
-        self.logger.log(log_level, f"SocketIO connected to tower #{self.tower_id} at {self._url}")
+        self.logger.log(log_level, f"Joined tower #{self.tower_id}: '{self._tower_name}'")
+        self.logger.log(log_level, f"SocketIO connected to {self._url}")
         self.logger.log(log_level, f"Ringing on {self.number_of_bells} {self._bell_type}")
         self.logger.log(log_level, f"Users: {self._user_name_map}")
         self.logger.log(log_level, f"Bell strokes: {stroke_string}")
