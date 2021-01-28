@@ -22,9 +22,9 @@ class RingingRoomTower:
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
         self._assigned_users: Dict[Bell, int] = {}
+        self._bell_type: BellType = TOWER_BELLS
         # A map from user IDs to the corresponding user name
         self._user_name_map: Dict[int, str] = {}
-        self._bell_type: BellType = TOWER_BELLS
 
         # === CALLBACK LISTS ===
         self.invoke_on_call: Dict[str, List[Callable[[], Any]]] = collections.defaultdict(list)
@@ -76,6 +76,11 @@ class RingingRoomTower:
         """ Returns the number of bells currently in the tower. """
         return len(self._bell_state)
 
+    @property
+    def bell_type(self) -> BellType:
+        """ Returns the current bell type (hand or tower bells). """
+        return self._bell_type
+
     def get_stroke(self, bell: Bell) -> Optional[Stroke]:
         """ Returns the stroke of a given Bell, or None if the bell is not in the tower. """
         if bell.index >= len(self._bell_state) or bell.index < 0:
@@ -121,17 +126,17 @@ class RingingRoomTower:
             return func
         return f
 
-    def on_bell_type_change(self, func: Callable[[], Any]) -> Callable[[], Any]:
-        """ Adds a callback for a user changing the BellType (TOWER_BELLS or HAND_BELLS). """
-        self._invoke_on_type_change.append(func)
-        return func
-
     def on_size_change(self, func: Callable[[int], Any]) -> Callable[[int], Any]:
         """
         Adds a given function as a callback for the tower size changing. Note that this is also
         called when the tower is created.
         """
         self.invoke_on_size_change.append(func)
+        return func
+
+    def on_bell_type_change(self, func: Callable[[], Any]) -> Callable[[], Any]:
+        """ Adds a callback for a user changing the BellType (TOWER_BELLS or HAND_BELLS). """
+        self._invoke_on_type_change.append(func)
         return func
 
     def on_user_enter(self, func: Callable[[int, str], Any]) -> Callable[[int, str], Any]:
@@ -388,16 +393,14 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
 
     def _on_audio_change(self, data: JSON) -> None:
         """ Callback called when the bell/audio type switches between tower/hand. """
-        new_type_str: str = data["new_audio"]
-        if new_type_str == "Tower":
-            new_type = TOWER_BELLS
-        elif new_type_str == "Hand":
-            new_type = HAND_BELLS
-        else:
-            self.logger.warning(f"Unknown tower type '{new_type_str}'")
+        try:
+            self._bell_type = BellType.from_ringingroom_name(data["new_audio"])
+        except ValueError as e:
+            self.logger.warning(e)
+
+        # Invoke the callbacks
         for c in self._invoke_on_type_change:
-            c(new_type)
-        
+            c(self._bell_type)
 
     # === INITIALISATION CODE ===
 

@@ -5,10 +5,21 @@ class BellType:
         self._is_hand = is_hand
 
     def is_handbells(self) -> bool:
+        """ Returns True if the tower is using hand bells. """
         return self._is_hand
 
     def is_towerbells(self) -> bool:
+        """ Returns True if the tower is using tower bells. """
         return not self._is_hand
+
+    @classmethod
+    def from_ringingroom_name(cls, name: str) -> "BellType":
+        if name == "Tower":
+            return TOWER_BELLS
+        elif name == "Hand":
+            return HAND_BELLS
+        else:
+            raise ValueError(f"Unknown tower type '{name}'")
 
     def __str__(self) -> str:
         return "handbells" if self._is_hand else "tower bells"
