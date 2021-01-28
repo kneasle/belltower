@@ -24,6 +24,11 @@ def on_assign(_id, name, bell):
 def on_bob():
     print("BOB!")
 
+@tower.on_call(call.SINGLE)
+def on_single():
+    print("SINGLE!")
+    tower.dump_debug_state()
+
 @tower.on_bell_ring
 def on_bell(bell, stroke):
     print(bell, stroke)

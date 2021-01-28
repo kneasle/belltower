@@ -26,6 +26,7 @@ class RingingRoomTower:
         self._user_name_map: Dict[int, str] = {}
         self._bell_type: BellType = TOWER_BELLS
 
+        # === CALLBACK LISTS ===
         self.invoke_on_call: Dict[str, List[Callable[[], Any]]] = collections.defaultdict(list)
         self.invoke_on_bell_ring: List[Callable[[Bell, Stroke], Any]] = []
         self.invoke_on_size_change: List[Callable[[int], Any]] = []
@@ -81,6 +82,26 @@ class RingingRoomTower:
             self.logger.error(f"Bell {bell} not in tower")
             return None
         return self._bell_state[bell.index]
+
+    def dump_debug_state(self, log_level: str = logging.WARNING) -> None:
+        """ Dump the entire state of this tower to the console for debugging. """
+        # Create a string of the bell strokes (separated into blocks of 4)
+        stroke_string = ""
+        for i, stroke in enumerate(self._bell_state):
+            if i % 4 == 0 and i > 0:
+                stroke_string += " "
+            stroke_string += "H" if stroke.is_hand() else "B"
+        # Print debug messages
+        self.logger.log(log_level, "===== RR TOWER DEBUG DUMP =====")
+        self.logger.log(log_level, f"SocketIO connected to tower #{self.tower_id} at {self._url}")
+        self.logger.log(log_level, f"Ringing on {self.number_of_bells} {self._bell_type}")
+        self.logger.log(log_level, f"Users: {self._user_name_map}")
+        self.logger.log(log_level, f"Bell strokes: {stroke_string}")
+        if len(self._assigned_users) == 0:
+            self.logger.log(log_level, f"No bells assigned")
+        else:
+            for b, i in self._assigned_users.items():
+                self.logger.log(log_level, f"Bell {b} assigned to #{i}/{self.user_name_from_id(i)}")
 
     # ===== CALLBACK DECORATORS =====
 
