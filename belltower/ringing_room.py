@@ -6,6 +6,7 @@ from typing import Optional, Callable, Dict, List, Any
 import socketio # type: ignore
 
 from belltower import call, Bell, Stroke, HANDSTROKE, BellType, HAND_BELLS, TOWER_BELLS
+from belltower.page_parsing import parse_page
 
 # A type alias for untyped JSON
 JSON = Dict[str, Any]
@@ -15,9 +16,11 @@ class RingingRoomTower:
 
     logger_name = "TOWER"
 
-    def __init__(self, tower_id: int, url: str) -> None:
+    def __init__(self, tower_id: int, url: str = "ringingroom.com") -> None:
         """ Initialise a tower with a given room id and url. """
         self.tower_id = tower_id
+        self._url = parse_page(tower_id, url)
+        self._socket_io_client: Optional[socketio.Client] = None
 
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
@@ -41,9 +44,6 @@ class RingingRoomTower:
         self.invoke_on_setting_change: List[Callable[[str, Any], Any]] = []
         self.invoke_on_row_gen_change: List[Callable[[Any], Any]] = []
         self.invoke_on_stop_touch: List[Callable[[], Any]] = []
-
-        self._url = url
-        self._socket_io_client: Optional[socketio.Client] = None
 
         self.logger = logging.getLogger(self.logger_name)
 

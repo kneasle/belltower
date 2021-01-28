@@ -2,7 +2,7 @@ import time
 
 from belltower import RingingRoomTower, call
 
-tower = RingingRoomTower(389217546, "https://rr0.ringingroom.com")
+tower = RingingRoomTower(389217546)
 
 @tower.on_user_enter
 def on_enter(_id, name):
