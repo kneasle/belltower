@@ -29,9 +29,10 @@ class RingingRoomTower:
         self._user_name_map: Dict[int, str] = {}
 
         # === CALLBACK LISTS ===
-        self.invoke_on_call: Dict[str, List[Callable[[], Any]]] = collections.defaultdict(list)
-        self.invoke_on_bell_ring: List[Callable[[Bell, Stroke], Any]] = []
-        self.invoke_on_size_change: List[Callable[[int], Any]] = []
+        self._invoke_on_call: Dict[str, List[Callable[[], Any]]] = collections.defaultdict(list)
+        self._invoke_on_bell_ring: List[Callable[[Bell, Stroke], Any]] = []
+        self._invoke_on_size_change: List[Callable[[int], Any]] = []
+        self._invoke_on_set_at_hand: List[Callable[[], Any]] = []
         # User callbacks
         self._invoke_on_user_enter: List[Callable[[int, str], Any]] = []
         self._invoke_on_user_leave: List[Callable[[int, str], Any]] = []
@@ -40,9 +41,9 @@ class RingingRoomTower:
         self._invoke_on_type_change: List[Callable[[], Any]] = []
 
         # Code specific to the Wheatley/RR interface
-        self.invoke_on_setting_change: List[Callable[[str, Any], Any]] = []
-        self.invoke_on_row_gen_change: List[Callable[[Any], Any]] = []
-        self.invoke_on_stop_touch: List[Callable[[], Any]] = []
+        self._invoke_on_setting_change: List[Callable[[str, Any], Any]] = []
+        self._invoke_on_row_gen_change: List[Callable[[Any], Any]] = []
+        self._invoke_on_stop_touch: List[Callable[[], Any]] = []
 
         self.logger = logging.getLogger(self.logger_name)
 
@@ -121,13 +122,13 @@ class RingingRoomTower:
         the state of the bell **before** it rang (meaning that the first blows after setting at hand
         will be considered to be a handstroke).
         """
-        self.invoke_on_bell_ring.append(func)
+        self._invoke_on_bell_ring.append(func)
         return func
 
     def on_call(self, call: str):
         """ Adds a given function as a callback for a given call. """
         def f(func: Callable[[], Any]) -> Callable[[], Any]:
-            self.invoke_on_call[call].append(func)
+            self._invoke_on_call[call].append(func)
             return func
         return f
 
@@ -136,7 +137,7 @@ class RingingRoomTower:
         Adds a given function as a callback for the tower size changing. Note that this is also
         called when the tower is created.
         """
-        self.invoke_on_size_change.append(func)
+        self._invoke_on_size_change.append(func)
         return func
 
     def on_bell_type_change(self, func: Callable[[], Any]) -> Callable[[], Any]:
@@ -283,7 +284,7 @@ class RingingRoomTower:
                 f"Bell {who_rang} rang, but the tower only has {self.number_of_bells} bells."
             )
         else:
-            for bell_ring_callback in self.invoke_on_bell_ring:
+            for bell_ring_callback in self._invoke_on_bell_ring:
                 # Call the callback with the stroke of the bell **before** it rang, so that it is
                 # less confusing for the consumer of the library
                 bell_ring_callback(who_rang, new_stroke.opposite())
@@ -293,12 +294,12 @@ class RingingRoomTower:
         call = data["call"]
         self.logger.info(f"RECEIVED: Call '{call}'")
 
-        found_callback = False
-        for call_callback in self.invoke_on_call.get(call, []):
-            call_callback()
-            found_callback = True
-        if not found_callback:
+        callbacks = self._invoke_on_call.get(call)
+        if callbacks is None:
             self.logger.warning(f"No callback found for '{call}'")
+        else:
+            for c in callbacks:
+                c()
 
     def _on_user_enter(self, data: JSON) -> None:
         """ Called when the server receives a new user. """
@@ -378,7 +379,7 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
         """
         global_bell_state: List[bool] = data["global_bell_state"]
         self._update_bell_state([Stroke(x) for x in global_bell_state])
-        for invoke_callback in self.invoke_on_size_change:
+        for invoke_callback in self._invoke_on_size_change:
             invoke_callback(self.number_of_bells)
 
     def _on_size_change(self, data: JSON) -> None:
@@ -387,13 +388,16 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
         if new_size != self.number_of_bells:
             # Remove the user who's bells have been removed (so that returning to a stage doesn't make
             # Wheatley think the bells are still assigned)
-            self._assigned_users = {bell: user for (bell, user) in self._assigned_users.items()
-                                               if bell.number <= new_size}
+            self._assigned_users = {
+                bell: user
+                for (bell, user) in self._assigned_users.items()
+                if bell.number <= new_size
+            }
             # Set the bells at handstroke
             self._bell_state = self._bells_set_at_hand(new_size)
             # Handle all the callbacks
             self.logger.info(f"RECEIVED: New tower size '{new_size}'")
-            for invoke_callback in self.invoke_on_size_change:
+            for invoke_callback in self._invoke_on_size_change:
                 invoke_callback(new_size)
 
     def _on_audio_change(self, data: JSON) -> None:
@@ -402,7 +406,6 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
             self._bell_type = BellType.from_ringingroom_name(data["new_audio"])
         except ValueError as e:
             self.logger.warning(e)
-
         # Invoke the callbacks
         for c in self._invoke_on_type_change:
             c(self._bell_type)
@@ -420,12 +423,12 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
         self._socket_io_client.on("s_bell_rung", self._on_bell_ring)
         self._socket_io_client.on("s_global_state", self._on_global_bell_state)
         self._socket_io_client.on("s_size_change", self._on_size_change)
+        self._socket_io_client.on("s_audio_change", self._on_audio_change)
         # User change callbacks
         self._socket_io_client.on("s_user_entered", self._on_user_enter)
         self._socket_io_client.on("s_user_left", self._on_user_leave)
         self._socket_io_client.on("s_set_userlist", self._on_user_list)
         self._socket_io_client.on("s_assign_user", self._on_assign_user)
-        self._socket_io_client.on("s_audio_change", self._on_audio_change)
         """
         # Wheatley specific callbacks
         self._socket_io_client.on("s_wheatley_setting", self._on_setting_change)
@@ -469,6 +472,7 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
             self.logger.info("Disconnect")
             self._socket_io_client.disconnect()
             self._socket_io_client = None
+
 
 class SocketIOClientError(Exception):
     """Errors related to SocketIO Client"""
