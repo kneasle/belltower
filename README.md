@@ -7,7 +7,8 @@ This library is quite W.I.P., and its development is mostly driven by its potent
 The library seems to be quite stable, but the API could change at any moment whilst I'm developing
 it.
 
-If you have any queries, then please leave [an issue](...).  Pull requests are very welcome, but if
+If you have any queries, then please leave 
+[an issue](https://github.com/kneasle/belltower/issues/new).  Pull requests are very welcome, but if
 you are making any large-scale changes then it may be worth suggesting them in an issue first.
 
 ## Why use this simple library?
