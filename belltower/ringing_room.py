@@ -229,14 +229,22 @@ class RingingRoomTower:
             "tower_id": self.tower_id
         })
 
-    def assign_user(self, user_id: int, bell: Bell) -> None:
+    def assign_user(self, user_id: Optional[int], bell: Bell) -> None:
         """ Assign a user to a given bell. """
         if bell.number > self.number_of_bells:
             raise ValueError(f"Bell {bell.number} exceeds tower size of {self.number_of_bells}")
-        user_name = self.user_name_from_id(user_id)
-        if user_name is None:
-            raise ValueError(f"Assigning non-existent user #{user_id} to bell {bell.number}")
-        self.logger.info(f"(EMIT): Assigning user #{user_id}('{user_name}') to {bell.number}")
+        if user_id is None:
+            self.logger.info(f"(EMIT): Unassigning bell {bell.number}")
+        else:
+            user_name = self.user_name_from_id(user_id)
+            if user_name is None:
+                raise ValueError(f"Assigning non-existent user #{user_id} to bell {bell.number}")
+            self.logger.info(f"(EMIT): Assigning user #{user_id}('{user_name}') to {bell.number}")
+        self._emit("s_assign_user", {
+            "bell": bell.number,
+            "user": user_id or '',
+            "tower_id": self.tower_id
+        })
 
     def chat(self, user: str, message: str, email: str = "<belltower.py>") -> None:
         """ Sends a message on chat, using given user name (which doesn't have to valid). """
