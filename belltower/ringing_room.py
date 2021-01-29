@@ -216,7 +216,7 @@ class RingingRoomTower:
         self.logger.info("(EMIT): Setting bells at handstroke")
         self._emit("c_set_bells", {"tower_id": self.tower_id})
     
-    def set_tower_size(self, number: int) -> None:
+    def set_size(self, number: int) -> None:
         """ Set the number of bells in the tower. """
         self.logger.info(f"(EMIT): Setting size to {number}")
         self._emit("c_size_change", {"new_size": number, "tower_id": self.tower_id})
