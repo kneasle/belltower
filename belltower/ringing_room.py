@@ -73,8 +73,8 @@ class RingingRoomTower:
 
     def user_name_from_id(self, user_id: int) -> Optional[str]:
         """
-        Converts a numerical user ID into the corresponding user name, returning None if user_id is not in
-        the tower.
+        Converts a numerical user ID into the corresponding user name, returning None if user_id is
+        not in the tower.
         """
         return self._user_name_map.get(user_id)
 
