@@ -229,7 +229,7 @@ class RingingRoomTower:
             "tower_id": self.tower_id
         })
 
-    def assign_user(self, user_id: Optional[int], bell: Bell) -> None:
+    def assign(self, user_id: Optional[int], bell: Bell) -> None:
         """ Assign a user to a given bell. """
         if bell.number > self.number_of_bells:
             raise ValueError(f"Bell {bell.number} exceeds tower size of {self.number_of_bells}")
@@ -245,6 +245,10 @@ class RingingRoomTower:
             "user": user_id or '',
             "tower_id": self.tower_id
         })
+
+    def unassign(self, bell: Bell) -> None:
+        """ Clear the assignment for a given bell. """
+        self.assign(None, bell)
 
     def chat(self, user: str, message: str, email: str = "<belltower.py>") -> None:
         """ Sends a message on chat, using given user name (which doesn't have to valid). """

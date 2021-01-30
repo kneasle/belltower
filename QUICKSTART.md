@@ -81,8 +81,8 @@ tower.ring_bell(Bell.from_number(3), HANDSTROKE)
 | Set bells at hand | `@tower.on_set_at_hand` | None | `tower.set_at_hand()` |
 | Change tower size | `@tower.on_size_change` | `new_size`: `int` | `tower.set_size(int)` |
 | Change bell type | `@tower.on_bell_type_change` | `new_size`: `int` | `tower.set_bell_type(BellType)` |
-| Assign a user to a bell | `@tower.on_assign` | `new_size`: `int` | `tower.assign_user(user_id: int, bell: Bell)` |
-| Bell is unassigned | `@tower.on_unassign` | `bell: Bell` | `tower.assign_user(None, bell: Bell)` |
+| Assign a user to a bell | `@tower.on_assign` | `user_id: int, username: str, bell: Bell` | `tower.assign(user_id: int, bell: Bell)` |
+| Bell is unassigned | `@tower.on_unassign` | `bell: Bell` | `tower.unassign(bell: Bell)` |
 | Chat message | `@tower.on_chat` | `user: str, message: str` | `tower.chat(user: str, message: str)` |
 | User enters | `@tower.on_user_enter` | `id: int, name: str` | N/A |
 | User leaves | `@tower.on_user_leave` | `id: int, name: str` | N/A |
