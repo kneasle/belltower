@@ -33,7 +33,7 @@ you are making any large-scale changes then it may be worth suggesting them in a
 
 A chatbot which, whenever anyone says `Hello` in the chat, replies with `Hello, <username>`:
 ```python
-# Import the tower class
+# Import the tower class, and 'time.sleep'
 from time import sleep
 from belltower import RingingRoomTower
 

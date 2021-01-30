@@ -1,4 +1,4 @@
-# Import the tower class
+# Import the tower class, and 'time.sleep'
 from time import sleep
 from belltower import RingingRoomTower
 
