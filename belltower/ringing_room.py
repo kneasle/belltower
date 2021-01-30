@@ -24,7 +24,7 @@ class RingingRoomTower:
         self._socket_io_client: Optional[socketio.Client] = None
         # This is used by `_on_global_bell_state` to determine whether or not a `s_global_state`
         # signal is caused by us entering the tower or by a user setting the bells at handstroke
-        self._waiting_for_first_global_state = False
+        self._waiting_for_first_global_state = True
 
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
@@ -193,19 +193,19 @@ class RingingRoomTower:
 
     # ===== ACTIONS =====
 
-    def ring_bell(self, bell: Bell, expected_stroke: Stroke) -> bool:
+    def ring_bell(self, bell: Bell, expected_stroke: Optional[Stroke] = None) -> bool:
         """
         Send a request to the the server if the bell can be rung on the given stroke.  Returns
         `true` if the bell was rung successfully.
         """
         try:
             stroke = self.get_stroke(bell)
-            if stroke != expected_stroke:
+            if expected_stroke is not None and stroke != expected_stroke:
                 self.logger.error(f"Bell {bell} on opposite stroke")
                 return False
             bell_num: int = bell.number
             is_handstroke: bool = stroke.is_hand()
-            self._emit("c_bell_ring", {"bell": bell_num, "stroke": is_handstroke, "tower_id": self.tower_id})
+            self._emit("c_bell_rung", {"bell": bell_num, "stroke": is_handstroke, "tower_id": self.tower_id})
             return True
         except Exception as e:
             self.logger.error(e)
@@ -240,7 +240,7 @@ class RingingRoomTower:
             if user_name is None:
                 raise ValueError(f"Assigning non-existent user #{user_id} to bell {bell.number}")
             self.logger.info(f"(EMIT): Assigning user #{user_id}('{user_name}') to {bell.number}")
-        self._emit("s_assign_user", {
+        self._emit("c_assign_user", {
             "bell": bell.number,
             "user": user_id or '',
             "tower_id": self.tower_id
