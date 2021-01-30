@@ -24,19 +24,12 @@ the [examples folder](https://github.com/kneasle/belltower/tree/master/examples)
 - This library doesn't have to be specific to Ringing Room (though Ringing Room is far and away the
   most popular online ringing platform, so for the time being it is the only supported platform).
 
-### Some important things to note
-
-1. The `RingingRoomTower` class only works if used inside a `with` block (see examples).  If the
-   main thread leaves that block, then the tower will shut its connection to Ringing Room and stop
-   working.
-2. If you perform an action in the room using this library (e.g. call a call), the callback for that
-   action **will** be called.
-3. This library uses its own types for `Bell`s, `Stroke`s and `BellType`s (tower- or hand-bells).
-
 ## Example: A simple chatbot
 
-A chatbot which, whenever anyone says `Hello` in the chat, replies with `Hello, <username>`.  This
-example can also be found at
+A chatbot which, whenever anyone says `Hello` in the chat, replies with `Hello, <username>`.
+
+More examples can be found in the 
+[examples folder](https://github.com/kneasle/belltower/tree/master/examples), with this example at
 [examples/chatbot.py](https://github.com/kneasle/belltower/blob/master/examples/chatbot.py):
 ```python
 # Import the tower class, and 'time.sleep'

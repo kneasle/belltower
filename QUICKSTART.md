@@ -13,6 +13,15 @@ tower = RingingRoomTower(765432918) # Insert your own tower ID here
 
 The rest of this guide will assume that you have a `RingingRoomTower` object called `tower`.
 
+## Some important things to note
+
+1. The `RingingRoomTower` class only works if used inside a `with` block (see examples).  If the
+   main thread leaves that block, then the tower will shut its connection to Ringing Room and stop
+   working.
+2. If you perform an action in the room using this library (e.g. call a call), the callback for that
+   action **will** be called.
+3. This library uses its own types for `Bell`s, `Stroke`s and `BellType`s (tower- or hand-bells).
+
 ---
 
 ## Events
