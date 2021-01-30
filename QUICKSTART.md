@@ -1,4 +1,33 @@
-# Quickstart
+# Quickstart & Documentation
+
+This file contains basic documentation for how to use BellTower.  If you learn best from examples,
+or want code to copy/paste (we all do it :wink:), then look in the
+[examples folder](https://github.com/kneasle/belltower/tree/master/examples).
+
+## Table of Contents
+
+- [**Some Important Things to Note**](#some-important-things-to-note)
+- [**Getting Started**](#getting-started)
+- [**Events**](#events)
+  - [**Callbacks**](#callbacks)
+  - [**Triggering Events**](#triggering-events)
+  - [**Table of Events**](#table-of-events)
+- [**Useful Functions**](#useful-functions)
+- [**Useful Properties**](#useful-properties)
+
+---
+
+## Some Important Things to Note
+
+1. The `RingingRoomTower` class only works if used inside a `with` block (see
+   [examples](https://github.com/kneasle/belltower/tree/master/examples)).  If the main thread
+   leaves that block, then the tower will shut its connection to Ringing Room and stop working.
+2. If you perform an action in the room using this library (e.g. call a call), the callback for that
+   action **will** be called.  As an example, if you ask for a bell to be rung, then you **will**
+   recieve the callback for that event.
+3. This library uses its own types for `Bell`s, `Stroke`s and `BellType`s (tower- or hand-bells).
+
+## Getting Started
 
 All the interactions with this library happen with a `RingingRoomTower` object.  This object will hold all
 the state of a tower in Ringing Room, and allows you to both subscribe to and make Ringing Room
@@ -12,17 +41,6 @@ tower = RingingRoomTower(765432918) # Insert your own tower ID here
 ```
 
 The rest of this guide will assume that you have a `RingingRoomTower` object called `tower`.
-
-## Some important things to note
-
-1. The `RingingRoomTower` class only works if used inside a `with` block (see examples).  If the
-   main thread leaves that block, then the tower will shut its connection to Ringing Room and stop
-   working.
-2. If you perform an action in the room using this library (e.g. call a call), the callback for that
-   action **will** be called.
-3. This library uses its own types for `Bell`s, `Stroke`s and `BellType`s (tower- or hand-bells).
-
----
 
 ## Events
 
@@ -47,7 +65,7 @@ such events occur.  Functions can be registered as callbacks in two ways:
     tower.on_bell_ring(bell_ring_callback)
     ```
 
-### Triggering events
+### Triggering Events
 
 All events (except users entering/leaving) can be triggered with the associated function.  For
 example, the following code would ring the 3rd if it is at `HANDSTROKE`:
@@ -55,7 +73,7 @@ example, the following code would ring the 3rd if it is at `HANDSTROKE`:
 tower.ring_bell(Bell.from_number(3), HANDSTROKE)
 ```
 
-### All events
+### Table of Events
 
 | Event | Callback Decorator | Callback Params | Function Name & Params |
 |---|---|---|---|
@@ -70,7 +88,7 @@ tower.ring_bell(Bell.from_number(3), HANDSTROKE)
 | User leaves | `@tower.on_user_leave` | `id: int, name: str` | N/A |
 | Make a call | `@tower.on_call(str)` | None | `tower.make_call(str)` |
 
-## Useful functions
+## Useful Functions
 
 - `tower.wait_loaded()`: Pauses the thread until the tower's connection to Ringing Room is up and
   running.  This **must** be called before using the tower.
@@ -82,7 +100,7 @@ tower.ring_bell(Bell.from_number(3), HANDSTROKE)
   precise, to stderr).  Useful for debugging.
 
 
-## Useful properties
+## Useful Properties
 
 Properties are read-only values attached to a given Tower
 

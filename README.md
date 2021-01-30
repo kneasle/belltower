@@ -11,6 +11,8 @@ If you have any queries, then please leave
 [an issue](https://github.com/kneasle/belltower/issues/new).  Pull requests are very welcome, but if
 you are making any large-scale changes then it may be worth suggesting them in an issue first.
 
+## Documentation/Quickstart
+
 Quickstart and documentation are both
 [here](https://github.com/kneasle/belltower/blob/master/QUICKSTART.md), and examples can be found in
 the [examples folder](https://github.com/kneasle/belltower/tree/master/examples).
