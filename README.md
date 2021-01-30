@@ -11,6 +11,10 @@ If you have any queries, then please leave
 [an issue](https://github.com/kneasle/belltower/issues/new).  Pull requests are very welcome, but if
 you are making any large-scale changes then it may be worth suggesting them in an issue first.
 
+Quickstart and documentation are both
+[here](https://github.com/kneasle/belltower/blob/master/QUICKSTART.md), and examples can be found in
+the [examples folder](https://github.com/kneasle/belltower/tree/master/examples).
+
 ## Why use this simple library?
 
 - Simple libraries are just nicer to use!
@@ -31,7 +35,9 @@ you are making any large-scale changes then it may be worth suggesting them in a
 
 ## Example: A simple chatbot
 
-A chatbot which, whenever anyone says `Hello` in the chat, replies with `Hello, <username>`:
+A chatbot which, whenever anyone says `Hello` in the chat, replies with `Hello, <username>`.  This
+example can also be found at
+[examples/chatbot.py](https://github.com/kneasle/belltower/blob/master/examples/chatbot.py):
 ```python
 # Import the tower class, and 'time.sleep'
 from time import sleep
