@@ -92,10 +92,16 @@ tower.ring_bell(Bell.from_number(3), HANDSTROKE)
 
 - `tower.wait_loaded()`: Pauses the thread until the tower's connection to Ringing Room is up and
   running.  This **must** be called before using the tower.
-- `tower.user_name_from_id(user_id: int) -> (str|None)`: Gets the non-unique user name of a user,
-  given their unique numerical ID.  Returns `None` if the user does not exist.
 - `tower.get_stroke(bell: Bell) -> (Stroke|None)`: Gets the current stroke of a given bell,
   returning `None` if the bell is not in the tower.
+- `tower.get_assignment(bell: Bell) -> (int|None)`: Gets the numerical ID of the user assigned to a
+  given bell (or `None` if the bell is unassigned).
+- `tower.unassign_all()`: Unassigns all the bells.  For technical reasons, you can't attach a
+  callback to this - it will turn into a whole bunch of single `unassign` events.
+- `tower.user_name_from_id(user_id: int) -> (str|None)`: Gets the non-unique user name of a user,
+  given their unique numerical ID.  Returns `None` if the user does not exist.
+- `tower.all_users() -> Dict[id, str]`: Gets the complete user list, as a dictionary between
+  numerical user IDs and user names.
 - `tower.dump_debug_state()`: Dumps the entire internal state of the Tower to the console (to be
   precise, to stderr).  Useful for debugging.
 

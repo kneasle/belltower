@@ -78,6 +78,18 @@ class RingingRoomTower:
         """
         return self._user_name_map.get(user_id)
 
+    def get_assignment(self, bell: Bell) -> Optional[int]:
+        """
+        Returns the user ID of the user assigned to a given Bell, or None if that bell is either
+        unassigned or doesn't exist.
+        """
+        return self._assigned_users.get(bell)
+
+    @property
+    def all_users(self) -> Dict[int, str]:
+        """ Returns a list of one user-(id, name) pair for each user in the tower. """
+        return dict(self._user_name_map)
+
     @property
     def number_of_bells(self) -> int:
         """ Returns the number of bells currently in the tower. """
@@ -249,6 +261,11 @@ class RingingRoomTower:
     def unassign(self, bell: Bell) -> None:
         """ Clear the assignment for a given bell. """
         self.assign(None, bell)
+
+    def unassign_all(self) -> None:
+        """ Unassign all the bells. """
+        for b in range(self.number_of_bells):
+            self.assign(None, Bell.from_index(b))
 
     def chat(self, user: str, message: str, email: str = "<belltower.py>") -> None:
         """ Sends a message on chat, using given user name (which doesn't have to valid). """
