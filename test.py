@@ -1,6 +1,6 @@
 import time
-
-from belltower import RingingRoomTower, call, HAND_BELLS, TOWER_BELLS
+from belltower import *
+from belltower import call
 
 tower = RingingRoomTower(389217546)
 
