@@ -1,6 +1,9 @@
-# Ignore cache files
+# Cache files
 **/__pycache__/*
 **/*.pyc
+# Build files from setuptools
 **/*.egg-info
 build/
 dist/
+# Version file (written by GitHub's CI when making a release)
+belltower/version.txt

@@ -6,9 +6,13 @@ import setuptools
 with open("README.md") as fh:
     long_desc = fh.read()
 
+# Read the README as the long description
+with open("belltower/version.txt") as fh:
+    version = fh.read()
+
 setuptools.setup(
     name="belltower",
-    version="v0.1.0",
+    version=version,
 
     author="Ben White-Horne",
     author_email="kneasle@gmail.com",
