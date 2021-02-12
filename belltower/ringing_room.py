@@ -5,6 +5,9 @@ from time import sleep
 from typing import Optional, Callable, Dict, List, Any
 
 import socketio # type: ignore
+import requests
+import urllib
+import json
 
 from belltower import call, Bell, Stroke, HANDSTROKE, BellType, HAND_BELLS, TOWER_BELLS
 from belltower.page_parsing import parse_page
@@ -16,8 +19,11 @@ class RingingRoomTower:
     """ A Tower for Ringing Room. """
 
     logger_name = "TOWER"
+    EXPECTED_RR_MAJOR = 1
+    EXPECTED_RR_MINOR = 0
 
-    def __init__(self, tower_id: int, url: str = "ringingroom.com") -> None:
+    def __init__(self, tower_id: int, url: str = "ringingroom.com",
+                 run_version_check: bool = True) -> None:
         """ Initialise a tower with a given room id and url. """
         self.tower_id = tower_id
         self._url, self._tower_name, self._bell_type = parse_page(tower_id, url)
@@ -25,6 +31,10 @@ class RingingRoomTower:
         # This is used by `_on_global_bell_state` to determine whether or not a `s_global_state`
         # signal is caused by us entering the tower or by a user setting the bells at handstroke
         self._waiting_for_first_global_state = True
+
+        # Check that RR has a compatible version
+        if run_version_check:
+            self.check_version()
 
         # === CURRENT TOWER STATE ===
         self._bell_state: List[Stroke] = []
@@ -277,6 +287,22 @@ class RingingRoomTower:
             "time": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "tower_id": self.tower_id
         })
+
+    def check_version(self) -> bool:
+        # Get version from RR's API
+        url = urllib.parse.urljoin(self._url, "api/version")
+        response = requests.get(url)
+        versions = json.loads(response.text)
+        semver = versions["socketio-version"].split(".")
+        # Unpack the major/minor versions from the semver string
+        rr_major = int(semver[0])
+        rr_minor = int(semver[1]) if len(semver) > 1 else 0
+        # Check that it's compatible with our version
+        if not (rr_major == self.EXPECTED_RR_MAJOR and rr_minor >= self.EXPECTED_RR_MINOR):
+            raise InvalidRRVersionError(
+                f"{rr_major}.{rr_minor}",
+                f"{self.EXPECTED_RR_MAJOR}.{self.EXPECTED_RR_MINOR}"
+            )
 
     # ===== CALLS =====
 
@@ -559,3 +585,14 @@ logged in as '{self._user_name_map[user_id_that_left]}'.")
 
 class SocketIOClientError(Exception):
     """Errors related to SocketIO Client"""
+
+
+class InvalidRRVersionError(Exception):
+    """ Error created if the RR server has an incompatible version. """
+
+    def __init__(self, rr_ver: str, exp_ver: str):
+        self.rr_ver = rr_ver
+        self.exp_ver = exp_ver
+
+    def __str__(self):
+        return f"RingingRoom version {self.rr_ver} won't work with expected version {self.exp_ver}"
