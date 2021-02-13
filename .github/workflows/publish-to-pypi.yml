@@ -18,7 +18,6 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install setuptools wheel twine
-        pip3 install -r requirements.txt
     - name: Make version file
       run: |
         echo ${{ github.ref }} | sed 's:.*/v::' > belltower/version.txt
